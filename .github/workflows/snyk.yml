@@ -24,10 +24,4 @@ jobs:
         with:
           command: code test
           args: --sarif-file-output=snyk-code.sarif
-      
-      - name: Upload to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
-        with:
-          sarif_file: snyk-code.sarif
 
