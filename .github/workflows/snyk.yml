@@ -5,44 +5,29 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      # La acción oficial automáticamente sincroniza con el dashboard
+      - name: Run Snyk Security Scan
+        uses: snyk/actions@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          node-version: '18'
+          command: code test
+          args: --sarif-file-output=snyk-code.sarif
       
-      - name: Install Snyk
-        run: npm install -g snyk
-      
-      - name: Verificar archivos del directorio
-        run: ls -la
-
-      # Analizar código fuente con Snyk Code
-      - name: Run Snyk Code to check for vulnerabilities
-        run: snyk code test --severity-threshold=high
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: true
-
-      # Subir resultados al dashboard de Snyk
-      - name: Monitor project in Snyk Dashboard
-        run: snyk monitor
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      # Opcional: Analizar contenedores Docker si los usas
-      - name: Run Snyk to check Docker
-        run: |
-          if [ -f "Dockerfile" ]; then
-            docker build -t myapp:latest .
-            snyk container test myapp:latest
-          fi
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: true
+      - name: Upload to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: snyk-code.sarif
 
