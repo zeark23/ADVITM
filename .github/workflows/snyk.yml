@@ -30,11 +30,11 @@ jobs:
         continue-on-error: true
       
       # Opcional: Analizar contenedores Docker si los usas
-      - name: Run Snyk to check Docker
+      - name: Monitor project in Snyk Dashboard
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
+        run: snyk monitor
           if [ -f "Dockerfile" ]; then
             snyk container test $(docker build -q .)
           fi
-        continue-on-error: true
+        continue-on-error: true
